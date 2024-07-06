@@ -5,6 +5,8 @@
 we use cpu plot fun
 
 just cpu0 (red line ) get data from zeromq.
+
+![realtime_plot.png](realtime_plot.png)
 ## compile and run
 
 in 2 terminals 
