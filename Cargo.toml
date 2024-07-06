@@ -1,0 +1,40 @@
+[package]
+name = "realtime_plot"
+version = "0.3.0"
+authors = ["Hao Hou <haohou302@gmail.com>"]
+edition = "2021"
+license = "MIT"
+description = "Plotters Piston Window Backend"
+homepage = "https://plotters-rs.github.io"
+repository = "https://github.com/plotters-rs/plotters-piston.git"
+readme = "README.md"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+piston_window = "0.132.0"
+# tokio = { version = "1.38", features = ["full", "tracing"] }
+log = "0.4"
+log4rs = { version = "1.3.0", features = ["toml", "json_encoder"] }
+config = "0.14"
+serde = { version = "1.0", features = ["derive"] }
+serde_derive = "1.0"
+tokio = { version = "1.38", features = ["full", "tracing"] }
+chrono="0.4"
+[dependencies.plotters-backend]
+version="0.3.6"
+
+[dev-dependencies]
+systemstat = "0.2.3"
+
+tmq = { version = "0.4" }
+futures = { version = "0.3", default-features = false, features = ["alloc"] }
+
+[dev-dependencies.plotters]
+default-features = false
+features = ["ttf", "all_series"]
+version="0.3.6"
+
+[[example]]
+name = "zmq_pub"
+path = "examples/zeromq_tmq/publish.rs"
