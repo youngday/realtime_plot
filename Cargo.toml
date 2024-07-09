@@ -21,13 +21,33 @@ serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0"
 tokio = { version = "1.38", features = ["full", "tracing"] }
 chrono="0.4"
+
+clap = { version="4.5", features = ["derive"] }
+env_logger = "0.11"
+flume = "0.11"
+git-version = "0.3"
+json5 = "0.4"
+zenoh = "0.11.0"
+zenoh-ext = "0.11.0"
+zenoh-util="0.11.0"
+
 [dependencies.plotters-backend]
 version="0.3.6"
+
+
 
 [dev-dependencies]
 systemstat = "0.2.3"
 
 tmq = { version = "0.4" }
+iceoryx2 ="0.3"
+iceoryx2-bb-container = "0.3"
+
+
+axum = { version="0.7", features = ["ws"] }
+axum-extra = { version="0.9", features = ["typed-header"] }
+
+
 futures = { version = "0.3", default-features = false, features = ["alloc"] }
 
 [dev-dependencies.plotters]
@@ -38,3 +58,6 @@ version="0.3.6"
 [[example]]
 name = "zmq_pub"
 path = "examples/zeromq_tmq/publish.rs"
+[[example]]
+name = "ice_pub"
+path = "examples/dds_iceoryx2/publisher.rs"
