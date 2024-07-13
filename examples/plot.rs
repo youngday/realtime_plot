@@ -1,3 +1,4 @@
+use futures::future::ok;
 use piston_window::{EventLoop, PistonWindow, WindowSettings};
 use plotters::prelude::*;
 use systemstat::platform::common::Platform;
@@ -8,7 +9,10 @@ use log::{debug, error, info, trace, warn};
 use log4rs;
 use std::collections::vec_deque::VecDeque;
 use std::time::{Duration, Instant};
+use std::sync::mpsc::channel;
+use std::thread;
 use tokio::sync::mpsc;
+use crate::mpsc::Sender;
 use tokio::time::sleep;
 
 use realtime_plot::draw_piston_window;
@@ -16,6 +20,12 @@ use realtime_plot::Settings;
 
 use futures::StreamExt;
 use tmq::{subscribe, Context, Result};
+
+
+use realtime_plot::transmission_data::TransmissionData;
+use iceoryx2::{port::subscriber, prelude::*};
+
+const CYCLE_TIME: Duration = Duration::from_millis(10);
 
 const FPS: u32 = 15;
 const LENGTH: u32 = 20;
@@ -34,7 +44,11 @@ async fn main() {
     let version: String = "0.1.0703".to_string();
     info!("Start your app,version:{0}", version);
 
-    let (tx, mut rx) = mpsc::channel(100);
+    // let (tx, mut rx) = mpsc::channel(100);
+
+    let (sender, receiver) = channel();
+
+   
     let mut loop_cnt: i64 = 0;
 
     let mut socket: subscribe::Subscribe = subscribe(&Context::new())
@@ -42,21 +56,57 @@ async fn main() {
         .unwrap()
         .subscribe(b"topic")
         .unwrap();
+    //zeromq received
+    // tokio::spawn(async move {
+    //     loop {
+    //         info!("loop_cnt {:?}", loop_cnt);
+    //         loop_cnt += loop_cnt;
+    //         let now = Instant::now(); // 程序起始时间
+    //         info!("zmq_sub start: {:?}", now);
+    //         let val = zmq_sub(&mut socket).await.unwrap();
+    //         let end = now.elapsed().as_millis();
+    //         info!("zmq_sub end,dur: {:?} ms.", end);
+    //         let ret_send = tx.send(val).await;
+    //         info!("ret_send: {:?}", ret_send);
+    //         info!("🟢 send val: {:?}", val);
+    //     }
+    // });
+    //iceoryx2 received
 
     tokio::spawn(async move {
-        loop {
-            // info!("loop_cnt {:?}", loop_cnt);
-            loop_cnt += loop_cnt;
-            let now = Instant::now(); // 程序起始时间
-            info!("zmq_sub start: {:?}", now);
-            let val = zmq_sub(&mut socket).await.unwrap();
-            let end = now.elapsed().as_millis();
-            info!("zmq_sub end,dur: {:?} ms.", end);
-            let ret_send = tx.send(val).await;
-            info!("ret_send: {:?}", ret_send);
-            info!("🟢 send val: {:?}", val);
+    // let computation = std::thread::spawn(move || {
+        // Some expensive computation.
+        // let _ = test(tx);
+
+        let service_name = ServiceName::new("My/Funk/ServiceName").unwrap();
+
+        let service = zero_copy::Service::new(&service_name)
+            .publish_subscribe()
+            .open_or_create::<TransmissionData>().unwrap();
+    
+        let subscriber = service.subscriber().create().unwrap();
+        while let Iox2Event::Tick = Iox2::wait(CYCLE_TIME) {
+            while let Some(sample) = subscriber.receive().unwrap() {
+                info!("received: {:?}", *sample);
+    
+                let val =sample.x.as_f64()*0.01;
+    
+                let _ret_send = sender.send(val);
+                info!("🟢 send val: {:?}", val);
+    
+            }
         }
+    
+        info!("exit ...");
+    
+        // Ok(())
+
     });
+    
+    // let result = computation.join().unwrap();//TODO: block and nonblock 
+
+
+
 
     let sys = System::new();
     window.set_max_fps(FPS as u64);
@@ -69,7 +119,8 @@ async fn main() {
 
         load_measurement[epoch % FPS as usize] = sys.cpu_load()?; //
 
-        let rx_data = rx.try_recv();
+        // let rx_data = rx.try_recv();//zeromq
+        let rx_data=receiver.recv();//ice_oryx
         info!("🟡 receive {:?}", rx_data);
 
         if rx_data.is_ok() {
@@ -172,3 +223,4 @@ async fn zmq_sub(socket: &mut subscribe::Subscribe) -> Result<f64> {
     }
     Ok(value)
 }
+

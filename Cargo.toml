@@ -61,3 +61,6 @@ path = "examples/zeromq_tmq/publish.rs"
 [[example]]
 name = "ice_pub"
 path = "examples/dds_iceoryx2/publisher.rs"
+[[example]]
+name = "ice_sub"
+path = "examples/dds_iceoryx2/subscriber.rs"
