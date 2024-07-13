@@ -9,8 +9,11 @@ just cpu0 (red line ) get data from zeromq.
 ![realtime_plot.png](realtime_plot.png)
 ## compile and run
 
+⚠️ please check your communication type: COM_TYPE:u32=0;//0=zeromq 1=ice_oryx2,2=?
+
+### zeromq
 in 2 terminals 
-* pub data
+* pub data  
 ```sh
 cargo run --example zmq_pub
 ```
@@ -18,7 +21,16 @@ cargo run --example zmq_pub
 ```sh
 cargo run --example plot
 ```
-
+### ice_oryx2
+in 2 terminals 
+* pub data  
+```sh
+cargo run --example ice_pub
+```
+* sub data and plot in realtime
+```sh
+cargo run --example plot
+```
 ## reference
 
 ###  plotters-piston - The Piston Window backend for Plotters
@@ -33,10 +45,18 @@ i
 ### tmq
 zeromq lib for rust .
 ## todo
+
+### config
+
+put blew in config.toml
+
+COM_TYPE:u32=0;//0=zeromq 1=ice_oryx2,2=? 
+
 ### speed 
 15 fps
 ### queue
-zeromq
+☑️ zeromq
+☑️ ice_oryx2
 mqtt
 socket
 tcp 
