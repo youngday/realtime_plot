@@ -31,6 +31,7 @@ zenoh = "0.11.0"
 zenoh-ext = "0.11.0"
 zenoh-util="0.11.0"
 
+
 [dependencies.plotters-backend]
 version="0.3.6"
 
@@ -39,10 +40,14 @@ version="0.3.6"
 [dev-dependencies]
 systemstat = "0.2.3"
 
+rumqttc = "0.24.0"
+rumqttd="0.19.0"
+
 tmq = { version = "0.4" }
 iceoryx2 ="0.3"
 iceoryx2-bb-container = "0.3"
-
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 axum = { version="0.7", features = ["ws"] }
 axum-extra = { version="0.9", features = ["typed-header"] }
@@ -64,3 +69,11 @@ path = "examples/dds_iceoryx2/publisher.rs"
 [[example]]
 name = "ice_sub"
 path = "examples/dds_iceoryx2/subscriber.rs"
+
+[[example]]
+name = "mqtt_asyncpubsub"
+path = "examples/mqtt/mqtt_asyncpubsub.rs"
+
+[[example]]
+name = "rumqttd"
+path = "examples/mqtt/rumqttd.rs"
