@@ -75,5 +75,11 @@ name = "mqtt_asyncpubsub"
 path = "examples/mqtt/mqtt_asyncpubsub.rs"
 
 [[example]]
+name = "mqtt_async_pub"
+path = "examples/mqtt/mqtt_async_pub.rs"
+[[example]]
+name = "mqtt_async_sub"
+path = "examples/mqtt/mqtt_async_sub.rs"
+[[example]]
 name = "rumqttd"
 path = "examples/mqtt/rumqttd.rs"
