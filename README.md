@@ -54,13 +54,11 @@ COM_TYPE:u32=0;//0=zeromq 1=ice_oryx2,2=?
 
 ### speed 
 15 fps
-### queue
+### queue (inspired from plotjuggler)
 ☑️ zeromq
 ☑️ ice_oryx2
-mqtt
-socket
-tcp 
-http
+☑️ mqtt
+websocket
 
 ## goal
 

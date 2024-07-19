@@ -59,6 +59,6 @@ async fn requests(client: AsyncClient) {
         info!("pub vec:{:?}",i);
         i+=1;
 
-        time::sleep(Duration::from_secs(1)).await;
+        time::sleep(Duration::from_secs_f64(0.02)).await;
     }
 }

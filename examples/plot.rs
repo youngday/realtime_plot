@@ -14,6 +14,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 use tokio::sync::mpsc;
 use tokio::time::sleep;
+use tokio::{task, time};
 
 use realtime_plot::draw_piston_window;
 use realtime_plot::Settings;
@@ -24,12 +25,22 @@ use tmq::{subscribe, Context, Result};
 use iceoryx2::{port::subscriber, prelude::*};
 use realtime_plot::transmission_data::TransmissionData;
 
+use rumqttc::v5::mqttbytes::v5::Packet;
+use rumqttc::v5::mqttbytes::v5::Packet::Publish;
+use rumqttc::v5::mqttbytes::v5::Packet::SubAck;
+use rumqttc::v5::mqttbytes::QoS;
+use rumqttc::v5::{
+    AsyncClient,
+    Event::{Incoming, Outgoing},
+    MqttOptions,
+};
+
 const CYCLE_TIME: Duration = Duration::from_millis(10);
 
 const FPS: u32 = 15;
 const LENGTH: u32 = 20;
 const N_DATA_POINTS: usize = (FPS * LENGTH) as usize;
-const COM_TYPE:u32=1;//0=zeromq 1=ice_oryx2,2=?
+const COM_TYPE:u32=2;//0=zeromq 1=ice_oryx2,2=mqtt?
 #[tokio::main]
 async fn main() {
     let mut window: PistonWindow = WindowSettings::new("Real Time CPU Usage", [450, 300])
@@ -100,6 +111,77 @@ async fn main() {
             info!("exit ...");
         });
         // let result = computation.join().unwrap();//TODO: block and nonblock
+    } else if COM_TYPE==2 {
+        let mut mqttoptions = MqttOptions::new("test-2", "localhost", 1884);
+        mqttoptions.set_keep_alive(Duration::from_secs(5));
+    
+        let (client, mut eventloop) = AsyncClient::new(mqttoptions, 10);
+        task::spawn(async move {
+            requests(client).await;
+            time::sleep(Duration::from_secs(3)).await;
+        });
+
+        task::spawn(async move {
+            loop {
+                let now = Instant::now(); // 程序起始时间
+                info!("mqtt start: {:?}", now);
+                let event = eventloop.poll().await;
+                match &event {
+                    Ok(v) => {
+                        // info!("Event = {v:?}");
+                        match &v {
+                            Incoming(i) => {
+                                // info!("incoming = {i:?}");
+                                match &i {
+                                    Packet::Connect(_, _, _) => {}
+                                    Packet::ConnAck(_) => {}
+                                    Publish(p) => {
+                                        // info!("publish = {p:?}");
+                                        let _topic=p.topic.clone();
+                                        let _payload=p.payload.clone();
+                                        let val=_payload.as_ref()[2].as_f64()*0.01;//[0,1,val]
+                                        info!("\ntopic = {0:?},payload = {1:?}",_topic,_payload.as_ref());
+                                    
+                         
+                                        let end = now.elapsed().as_millis();
+                                        info!("mqtt end,dur: {:?} ms.", end);
+                                        let ret_send = sender.send(val);
+                                        info!("ret_send: {:?}", ret_send);
+                                        info!("🟢 send val: {:?}", val);
+
+        
+                                    }
+                                    Packet::PubAck(_) => {}
+                                    Packet::PingReq(_) => {}
+                                    Packet::PingResp(_) => {}
+                                    Packet::Subscribe(_) => {}
+                                    SubAck(ack) => {
+                                        info!("ack = {ack:?}");
+                                    }
+                                    Packet::PubRec(_) => {}
+                                    Packet::PubRel(_) => {}
+                                    Packet::PubComp(_) => {}
+                                    Packet::Unsubscribe(_) => {}
+                                    Packet::UnsubAck(_) => {}
+                                    Packet::Disconnect(_) => {}
+                                }
+                            }//pack
+                            Outgoing(_o) => {
+                                // info!("Outgoing = {o:?}");
+                            }
+                        }//event
+                    }//ok
+                    Err(e) => {
+                        error!("Error = {e:?}");
+                        // return Ok(());
+                    }//err
+                }//result
+            }//loop
+        });
+    
+       
+
+    
     }else {
         
     }
@@ -218,4 +300,15 @@ async fn zmq_sub(socket: &mut subscribe::Subscribe) -> Result<f64> {
         _ => {} // ^ 为什么必须写这样的语句呢？肯定有更优雅的处理方式！
     }
     Ok(value)
+}
+
+
+async fn requests(client: AsyncClient) {
+    loop {
+        client.subscribe("hello", QoS::AtMostOnce).await.unwrap();
+        time::sleep(Duration::from_secs(1)).await;
+        // info!("subscribe:");
+    }
+
+    // time::sleep(Duration::from_secs(120)).await;
 }

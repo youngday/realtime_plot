@@ -1,7 +1,6 @@
 use log::{debug, error, info, trace, warn};
 use log4rs;
 
-use rumqttc::tokio_rustls::rustls::internal::msgs::base::Payload;
 use tmq::publish;
 use tokio::{task, time};
 
@@ -37,6 +36,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     loop {
         let event = eventloop.poll().await;
+        //payload unpack ref  https://github.com/bytebeamio/rumqtt/issues/617
         match &event {
             Ok(v) => {
                 // info!("Event = {v:?}");
@@ -51,8 +51,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
                                 let _topic=p.topic.clone();
                                 let _payload=p.payload.clone();
                                 info!("\ntopic = {0:?},payload = {1:?}",_topic,_payload.as_ref());
-
-                     
 
                             }
                             Packet::PubAck(_) => {}
@@ -69,18 +67,18 @@ async fn main() -> Result<(), Box<dyn Error>> {
                             Packet::UnsubAck(_) => {}
                             Packet::Disconnect(_) => {}
                         }
-                    }
-                    Outgoing(o) => {
+                    }//pack
+                    Outgoing(_o) => {
                         // info!("Outgoing = {o:?}");
                     }
-                }
-            }
+                }//event
+            }//ok
             Err(e) => {
                 error!("Error = {e:?}");
                 return Ok(());
-            }
-        }
-    }
+            }//err
+        }//result
+    }//loop
 }
 
 async fn requests(client: AsyncClient) {
