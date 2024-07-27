@@ -64,4 +64,4 @@ websocket
 
 plot your data lightly with rust.
 
-🟢  🔴  🟡    ✏️
+🟢  🔴  🟡    ✏️  🪟   ⏰  

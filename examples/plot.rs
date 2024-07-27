@@ -37,8 +37,8 @@ use rumqttc::v5::{
 
 const CYCLE_TIME: Duration = Duration::from_millis(10);
 
-const FPS: u32 = 15;
-const LENGTH: u32 = 20;
+const FPS: u32 =60;
+const LENGTH: u32 = 5;
 const N_DATA_POINTS: usize = (FPS * LENGTH) as usize;
 const COM_TYPE:u32=2;//0=zeromq 1=ice_oryx2,2=mqtt?
 #[tokio::main]
@@ -193,8 +193,11 @@ async fn main() {
     let mut data = vec![];
     let mut my_data: f64 = 0.0;
     while let Some(_) = draw_piston_window(&mut window, |b| {
-        let mut cpu_loads = load_measurement[epoch % FPS as usize].done()?;
+        let now = Instant::now(); // 程序起始时间
+        info!("gui start: {:?}", now);
 
+
+        let mut cpu_loads = load_measurement[epoch % FPS as usize].done()?;
         load_measurement[epoch % FPS as usize] = sys.cpu_load()?; //
 
         // let rx_data = rx.try_recv();//zeromq
@@ -222,14 +225,16 @@ async fn main() {
             }
             target.push_back(1.0 - core_load.idle);
         }
-
+        let end = now.elapsed().as_millis();
+        info!("⏰ 🪟 gui end,dur 5: {:?} ms.", end);
         let mut cc = ChartBuilder::on(&root)
             .margin(10)
             .caption("Real Time CPU Usage", ("sans-serif", 30))
             .x_label_area_size(40)
             .y_label_area_size(50)
             .build_cartesian_2d(0..N_DATA_POINTS as u32, 0f32..1f32)?;
-
+        let end = now.elapsed().as_millis();
+        info!("⏰ 🪟 gui end,dur 6 : {:?} ms.", end);//4
         cc.configure_mesh()
             .x_label_formatter(&|x| format!("{}", -(LENGTH as f32) + (*x as f32 / FPS as f32)))
             .y_label_formatter(&|y| format!("{}%", (*y * 100.0) as u32))
@@ -239,8 +244,9 @@ async fn main() {
             .y_desc("% Busy")
             .axis_desc_style(("sans-serif", 15))
             .draw()?;
-
-        for (idx, data) in (0..).zip(data.iter()) {
+        let end = now.elapsed().as_millis();
+        info!("⏰ 🪟 gui end,dur 7: {:?} ms.", end);//7
+        for (idx, data) in (0..2).zip(data.iter()) {//✏️  in(0..) to in(0..x) plot number
             cc.draw_series(LineSeries::new(
                 (0..).zip(data.iter()).map(|(a, b)| (a, *b)),
                 &Palette99::pick(idx),
@@ -250,14 +256,18 @@ async fn main() {
                 Rectangle::new([(x - 5, y - 5), (x + 5, y + 5)], &Palette99::pick(idx))
             });
         }
-
+        let end = now.elapsed().as_millis();
+        info!("⏰ 🪟 gui end,dur 8: {:?} ms.", end);//24  2*plot_number  2*12=24ms
         cc.configure_series_labels()
             .background_style(&WHITE.mix(0.8))
             .border_style(&BLACK)
             .draw()?;
 
         epoch += 1;
+        let end = now.elapsed().as_millis();
+        info!("⏰ 🪟 gui end,dur: {:?} ms.", end);//4
         Ok(())
+
     }) {}
 }
 
