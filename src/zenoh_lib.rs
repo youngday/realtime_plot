@@ -65,9 +65,7 @@ impl From<&CommonArgs> for Config {
             config.scouting.multicast.set_enabled(Some(false)).unwrap();
         }
         if value.enable_shm {
-            #[cfg(feature = "shared-memory")]
             config.transport.shared_memory.set_enabled(true).unwrap();
-            #[cfg(not(feature = "shared-memory"))]
             {
                 println!("enable-shm argument: SHM cannot be enabled, because Zenoh is compiled without shared-memory feature!");
                 std::process::exit(-1);
