@@ -43,9 +43,9 @@ systemstat = "0.2.3"
 rumqttc = "0.24.0"
 rumqttd="0.19.0"
 
-tmq = { version = "0.4" }
-iceoryx2 ="0.3"
-iceoryx2-bb-container = "0.3"
+tmq = { version = "0.5.0" }
+iceoryx2 ="0.4"
+iceoryx2-bb-container ="0.4"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
@@ -78,3 +78,12 @@ path = "examples/mqtt/mqtt_async_sub.rs"
 [[example]]
 name = "rumqttd"
 path = "examples/mqtt/rumqttd.rs"
+
+
+
+
+
+
+
+
+

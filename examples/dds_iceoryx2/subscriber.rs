@@ -9,56 +9,30 @@
 // which is available at https://opensource.org/licenses/MIT.
 //
 // SPDX-License-Identifier: Apache-2.0 OR MIT
-// mod transmission_data;
+
 use core::time::Duration;
-use iceoryx2::{port::subscriber, prelude::*};
 use realtime_plot::transmission_data::TransmissionData;
+use iceoryx2::prelude::*;
 
 const CYCLE_TIME: Duration = Duration::from_secs(1);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    
+    let node = NodeBuilder::new().create::<ipc::Service>()?;
 
-    // let computation = std::thread::spawn(|| {
-    //     // Some expensive computation.
-    //     let _ = test();
-    // });
-    
-    // let result = computation.join().unwrap();
-    // println!("{:?}",result);
+    let service = node
+        .service_builder(&"My/Funk/ServiceName".try_into()?)
+        .publish_subscribe::<TransmissionData>()
+        .open_or_create()?;
 
+    let subscriber = service.subscriber_builder().create()?;
 
-
-
-        let computation = std::thread::spawn(|| {
-        // Some expensive computation.
-        let _ = test();
-    });
-    
-    let result = computation.join().unwrap();
-
-
-    println!("exit ...");
-
-    Ok(())
-}
-
-
-fn test() -> Result<(), Box<dyn std::error::Error>> {
-    let service_name = ServiceName::new("My/Funk/ServiceName")?;
-
-    let service = zero_copy::Service::new(&service_name)
-        .publish_subscribe()
-        .open_or_create::<TransmissionData>()?;
-
-    let subscriber = service.subscriber().create()?;
-    while let Iox2Event::Tick = Iox2::wait(CYCLE_TIME) {
+    while let NodeEvent::Tick = node.wait(CYCLE_TIME) {
         while let Some(sample) = subscriber.receive()? {
             println!("received: {:?}", *sample);
         }
     }
 
-    println!("exit ...");
+    println!("exit");
 
     Ok(())
 }

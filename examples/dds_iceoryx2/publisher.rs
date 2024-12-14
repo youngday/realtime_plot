@@ -11,27 +11,25 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use core::time::Duration;
-use iceoryx2::prelude::*;
 use realtime_plot::transmission_data::TransmissionData;
+use iceoryx2::prelude::*;
 
-const CYCLE_TIME: Duration = Duration::from_millis(100);
+const CYCLE_TIME: Duration = Duration::from_secs(1);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let service_name = ServiceName::new("My/Funk/ServiceName")?;
+    let node = NodeBuilder::new().create::<ipc::Service>()?;
 
-    let service = zero_copy::Service::new(&service_name)
-        .publish_subscribe()
-        .open_or_create::<TransmissionData>()?;
+    let service = node
+        .service_builder(&"My/Funk/ServiceName".try_into()?)
+        .publish_subscribe::<TransmissionData>()
+        .open_or_create()?;
 
-    let publisher = service.publisher().create()?;
+    let publisher = service.publisher_builder().create()?;
 
     let mut counter: u64 = 0;
 
-    while let Iox2Event::Tick = Iox2::wait(CYCLE_TIME) {
+    while let NodeEvent::Tick = node.wait(CYCLE_TIME) {
         counter += 1;
-        if counter > 100 {
-            counter = 0;
-        }
         let sample = publisher.loan_uninit()?;
 
         let sample = sample.write_payload(TransmissionData {
@@ -45,7 +43,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Send sample {} ...", counter);
     }
 
-    println!("exit ...");
+    println!("exit");
 
     Ok(())
 }

@@ -40,7 +40,7 @@ const CYCLE_TIME: Duration = Duration::from_millis(10);
 const FPS: u32 =60;
 const LENGTH: u32 = 5;
 const N_DATA_POINTS: usize = (FPS * LENGTH) as usize;
-const COM_TYPE:u32=2;//0=zeromq 1=ice_oryx2,2=mqtt?
+const COM_TYPE:u32=1;//0=zeromq 1=ice_oryx2,2=mqtt?
 #[tokio::main]
 async fn main() {
     let mut window: PistonWindow = WindowSettings::new("Real Time CPU Usage", [450, 300])
@@ -86,24 +86,22 @@ async fn main() {
     } else if COM_TYPE==1 {
         //iceoryx2 received
         tokio::spawn(async move {
-            // let computation = std::thread::spawn(move || {
-            // Some expensive computation.
-            // let _ = test(tx);
 
-            let service_name = ServiceName::new("My/Funk/ServiceName").unwrap();
+            //for spawn , merge:change ? into unwrap()
+            let node = NodeBuilder::new().create::<ipc::Service>().unwrap();
+            let service = node
+                .service_builder(&"My/Funk/ServiceName".try_into().unwrap())
+                .publish_subscribe::<TransmissionData>()
+                .open_or_create().unwrap();
+        
+            let subscriber = service.subscriber_builder().create().unwrap();
+        
 
-            let service = zero_copy::Service::new(&service_name)
-                .publish_subscribe()
-                .open_or_create::<TransmissionData>()
-                .unwrap();
-
-            let subscriber = service.subscriber().create().unwrap();
-            while let Iox2Event::Tick = Iox2::wait(CYCLE_TIME) {
+            while let NodeEvent::Tick = node.wait(CYCLE_TIME) {
                 while let Some(sample) = subscriber.receive().unwrap() {
-                    info!("received: {:?}", *sample);
-
+                    println!("received: {:?}", *sample);
+                    //plot interface
                     let val = sample.x.as_f64() * 0.01;
-
                     let _ret_send = sender.send(val);
                     info!("🟢 send val: {:?}", val);
                 }
