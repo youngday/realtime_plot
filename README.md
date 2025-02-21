@@ -18,6 +18,10 @@ in 2 terminals
 cargo run --example zmq_pub
 ```
 * sub data and plot in realtime
+NOTE:in plot.rs,config:
+```rs
+const COM_TYPE: u32 = 0; //0=zeromq 1=ice_oryx2,2=mqtt?
+```
 ```sh
 cargo run --example plot
 ```
@@ -28,6 +32,10 @@ in 2 terminals
 cargo run --example ice_pub
 ```
 * sub data and plot in realtime
+NOTE:in plot.rs,config:
+```rs
+const COM_TYPE: u32 = 1; //0=zeromq 1=ice_oryx2,2=mqtt?
+```
 ```sh
 cargo run --example plot
 ```

@@ -16,7 +16,7 @@ piston_window = "0.132.0"
 # tokio = { version = "1.38", features = ["full", "tracing"] }
 log = "0.4"
 log4rs = { version = "1.3.0", features = ["toml", "json_encoder"] }
-config = "0.14"
+config = "0.15"
 serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0"
 tokio = { version = "1.40", features = ["full", "tracing"] }
@@ -44,13 +44,13 @@ rumqttc = "0.24.0"
 rumqttd="0.19.0"
 
 tmq = { version = "0.5.0" }
-iceoryx2 ="0.4"
-iceoryx2-bb-container ="0.4"
+iceoryx2 ="0.5"
+iceoryx2-bb-container ="0.5"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
-axum = { version="0.7", features = ["ws"] }
-axum-extra = { version="0.9", features = ["typed-header"] }
+axum = { version="0.8", features = ["ws"] }
+axum-extra = { version="0.10", features = ["typed-header"] }
 
 
 futures = { version = "0.3", default-features = false, features = ["alloc"] }

@@ -37,10 +37,10 @@ use rumqttc::v5::{
 
 const CYCLE_TIME: Duration = Duration::from_millis(10);
 
-const FPS: u32 =60;
+const FPS: u32 = 60;
 const LENGTH: u32 = 5;
 const N_DATA_POINTS: usize = (FPS * LENGTH) as usize;
-const COM_TYPE:u32=1;//0=zeromq 1=ice_oryx2,2=mqtt?
+const COM_TYPE: u32 = 1; //0=zeromq 1=ice_oryx2,2=mqtt?
 #[tokio::main]
 async fn main() {
     let mut window: PistonWindow = WindowSettings::new("Real Time CPU Usage", [450, 300])
@@ -68,7 +68,7 @@ async fn main() {
 
     //zeromq received
 
-    if COM_TYPE==0 {
+    if COM_TYPE == 0 {
         tokio::spawn(async move {
             loop {
                 info!("loop_cnt {:?}", loop_cnt);
@@ -83,21 +83,20 @@ async fn main() {
                 info!("🟢 send val: {:?}", val);
             }
         });
-    } else if COM_TYPE==1 {
+    } else if COM_TYPE == 1 {
         //iceoryx2 received
         tokio::spawn(async move {
-
             //for spawn , merge:change ? into unwrap()
             let node = NodeBuilder::new().create::<ipc::Service>().unwrap();
             let service = node
                 .service_builder(&"My/Funk/ServiceName".try_into().unwrap())
                 .publish_subscribe::<TransmissionData>()
-                .open_or_create().unwrap();
-        
-            let subscriber = service.subscriber_builder().create().unwrap();
-        
+                .open_or_create()
+                .unwrap();
 
-            while let NodeEvent::Tick = node.wait(CYCLE_TIME) {
+            let subscriber = service.subscriber_builder().create().unwrap();
+
+            while node.wait(CYCLE_TIME).is_ok() {
                 while let Some(sample) = subscriber.receive().unwrap() {
                     println!("received: {:?}", *sample);
                     //plot interface
@@ -109,10 +108,10 @@ async fn main() {
             info!("exit ...");
         });
         // let result = computation.join().unwrap();//TODO: block and nonblock
-    } else if COM_TYPE==2 {
+    } else if COM_TYPE == 2 {
         let mut mqttoptions = MqttOptions::new("test-2", "localhost", 1884);
         mqttoptions.set_keep_alive(Duration::from_secs(5));
-    
+
         let (client, mut eventloop) = AsyncClient::new(mqttoptions, 10);
         task::spawn(async move {
             requests(client).await;
@@ -135,19 +134,20 @@ async fn main() {
                                     Packet::ConnAck(_) => {}
                                     Publish(p) => {
                                         // info!("publish = {p:?}");
-                                        let _topic=p.topic.clone();
-                                        let _payload=p.payload.clone();
-                                        let val=_payload.as_ref()[2].as_f64()*0.01;//[0,1,val]
-                                        info!("\ntopic = {0:?},payload = {1:?}",_topic,_payload.as_ref());
-                                    
-                         
+                                        let _topic = p.topic.clone();
+                                        let _payload = p.payload.clone();
+                                        let val = _payload.as_ref()[2].as_f64() * 0.01; //[0,1,val]
+                                        info!(
+                                            "\ntopic = {0:?},payload = {1:?}",
+                                            _topic,
+                                            _payload.as_ref()
+                                        );
+
                                         let end = now.elapsed().as_millis();
                                         info!("mqtt end,dur: {:?} ms.", end);
                                         let ret_send = sender.send(val);
                                         info!("ret_send: {:?}", ret_send);
                                         info!("🟢 send val: {:?}", val);
-
-        
                                     }
                                     Packet::PubAck(_) => {}
                                     Packet::PingReq(_) => {}
@@ -163,25 +163,20 @@ async fn main() {
                                     Packet::UnsubAck(_) => {}
                                     Packet::Disconnect(_) => {}
                                 }
-                            }//pack
+                            } //pack
                             Outgoing(_o) => {
                                 // info!("Outgoing = {o:?}");
                             }
-                        }//event
-                    }//ok
+                        } //event
+                    } //ok
                     Err(e) => {
                         error!("Error = {e:?}");
                         // return Ok(());
-                    }//err
-                }//result
-            }//loop
+                    } //err
+                } //result
+            } //loop
         });
-    
-       
-
-    
-    }else {
-        
+    } else {
     }
 
     let sys = System::new();
@@ -193,7 +188,6 @@ async fn main() {
     while let Some(_) = draw_piston_window(&mut window, |b| {
         let now = Instant::now(); // 程序起始时间
         info!("gui start: {:?}", now);
-
 
         let mut cpu_loads = load_measurement[epoch % FPS as usize].done()?;
         load_measurement[epoch % FPS as usize] = sys.cpu_load()?; //
@@ -232,7 +226,7 @@ async fn main() {
             .y_label_area_size(50)
             .build_cartesian_2d(0..N_DATA_POINTS as u32, 0f32..1f32)?;
         let end = now.elapsed().as_millis();
-        info!("⏰ 🪟 gui end,dur 6 : {:?} ms.", end);//4
+        info!("⏰ 🪟 gui end,dur 6 : {:?} ms.", end); //4
         cc.configure_mesh()
             .x_label_formatter(&|x| format!("{}", -(LENGTH as f32) + (*x as f32 / FPS as f32)))
             .y_label_formatter(&|y| format!("{}%", (*y * 100.0) as u32))
@@ -243,8 +237,9 @@ async fn main() {
             .axis_desc_style(("sans-serif", 15))
             .draw()?;
         let end = now.elapsed().as_millis();
-        info!("⏰ 🪟 gui end,dur 7: {:?} ms.", end);//7
-        for (idx, data) in (0..2).zip(data.iter()) {//✏️  in(0..) to in(0..x) plot number
+        info!("⏰ 🪟 gui end,dur 7: {:?} ms.", end); //7
+        for (idx, data) in (0..2).zip(data.iter()) {
+            //✏️  in(0..) to in(0..x) plot number
             cc.draw_series(LineSeries::new(
                 (0..).zip(data.iter()).map(|(a, b)| (a, *b)),
                 &Palette99::pick(idx),
@@ -255,7 +250,7 @@ async fn main() {
             });
         }
         let end = now.elapsed().as_millis();
-        info!("⏰ 🪟 gui end,dur 8: {:?} ms.", end);//24  2*plot_number  2*12=24ms
+        info!("⏰ 🪟 gui end,dur 8: {:?} ms.", end); //24  2*plot_number  2*12=24ms
         cc.configure_series_labels()
             .background_style(&WHITE.mix(0.8))
             .border_style(&BLACK)
@@ -263,9 +258,8 @@ async fn main() {
 
         epoch += 1;
         let end = now.elapsed().as_millis();
-        info!("⏰ 🪟 gui end,dur: {:?} ms.", end);//4
+        info!("⏰ 🪟 gui end,dur: {:?} ms.", end); //4
         Ok(())
-
     }) {}
 }
 
@@ -309,7 +303,6 @@ async fn zmq_sub(socket: &mut subscribe::Subscribe) -> Result<f64> {
     }
     Ok(value)
 }
-
 
 async fn requests(client: AsyncClient) {
     loop {
