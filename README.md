@@ -1,5 +1,5 @@
 # realtime_plot
-
+for  realtime_plot_wasm please check https://github.com/youngday/realtime_plot_wasm
 ## doc
 
 we use cpu plot fun
